@@ -1,0 +1,1 @@
+rm -rf peanut996.im.*
