@@ -4,6 +4,9 @@
 *.dll
 *.so
 *.dylib
+peanut996.im.react/
+peanut996.im.vue/
+peanut996.im.go/
 
 # Test binary, built with `go test -c`
 *.test
