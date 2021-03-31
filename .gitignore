@@ -15,6 +15,9 @@
 go.sum
 go.mod
 
+# config
+*.yaml
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 peanut996.im.vue/

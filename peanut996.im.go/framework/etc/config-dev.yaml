@@ -1,7 +1,11 @@
+info:
+  port: :6000
+  name: starter
+
 mongo:
-  url: "mongodb://peanuts:Wu849421294@peanut996.cn:27017"
+  url: mongodb://127.0.0.1:27017/
+
 redis:
-  host: peanut996.cn
+  host: 127.0.0.1
   port: 6379
-  passwd: 849421294
   db: 0
