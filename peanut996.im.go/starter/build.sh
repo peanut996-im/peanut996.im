@@ -29,7 +29,7 @@ cd ./src
 go build -o ../bin/${appName} .
 
 if [ ${targetos} = "windows" ];then
-    cd ./bin
+    cd ../bin
     mv ${appName} ${appName}.exe
     cd ../
 fi
