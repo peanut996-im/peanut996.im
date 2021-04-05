@@ -22,3 +22,7 @@ go.mod
 # vendor/
 peanut996.im.vue/
 peanut996.im.react/
+
+# IDE
+.idea
+,vscode
