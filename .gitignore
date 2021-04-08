@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-
+bin/
 # Test binary, built with `go test -c`
 *.test
 
@@ -25,4 +25,4 @@ peanut996.im.react/
 
 # IDE
 .idea
-,vscode
+.vscode
