@@ -21,12 +21,31 @@ targetos=$1
 bash ./mod.sh
 
 appName=${PWD##*/}
+BuildTime=$(date)
+BuildTime=${BuildTime// /_}
+BuildUser=$(whoami)
+BuildUser=${BuildUser// /_}
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+GIT_VERSION=$(git log --pretty=format:"%h" -1)
+BuildVersion="${GIT_BRANCH}_${GIT_VERSION}"
+BuildTimeStamp=`date +%s`
+check_ifconfig=``
+if [ "${targetos}"=="windows" ]; then
+    BuildMachine=$(ipconfig |grep "IPv4" |grep -v "192.168.2.1"| grep -v "127.0.0.1"| grep -v "localhost" | awk -F': ' '{print $2}')
+elif [ "$(ls /sbin/ | grep ifconfig)"/sbin/ifconfig | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}'| tr "\n" " " = "ifconfig" ] ;then
+    BuildMachine=$(/sbin/ifconfig | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}'| tr "\n" " ")
+else
+    BuildMachine=$(ip addr | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}' | awk -F'/' '{print $1}' | head -n1)
+fi
 
+
+BuildMachine=${BuildMachine// /_}
+BuildMachine="$(uname -n)@${BuildMachine}"
 rm -f ./bin/*${appName}*
 cd ./src
 
 ## 编译参数
-go build -o ../bin/${appName} .
+go build  -ldflags "-X main.BuildVersion=${BuildVersion} -X main.BuildUser=${BuildUser} -X main.BuildTime=${BuildTime} -X main.BuildMachine=${BuildMachine} " -o ../bin/${appName} .
 
 if [ ${targetos} = "windows" ];then
     cd ../bin
