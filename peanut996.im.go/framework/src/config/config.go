@@ -16,7 +16,7 @@ type SrvConfig struct {
 
 //Mongo conf for mongoDB
 type Mongo struct {
-	IP     string `yaml:"ip"`
+	Host   string `yaml:"host"`
 	Port   string `yaml:"port"`
 	DB     string `yaml:"db"`
 	Passwd string `yaml:"passwd"`
