@@ -1,22 +1,29 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
-var lastRdsClient *RedisClient
+var (
+	lastRdsClient *RedisClient
+)
 
+// RedisClient ...
 type RedisClient struct {
 	addr              string
 	pass              string
 	db                int
 	session           *redis.Client
-	keepAliveInterval time.Duration // second
+	ctx               context.Context
+	KeepAliveInterval time.Duration //  second
+	timeout           time.Duration
 }
 
+// IsNotExistError ...
 func IsNotExistError(err error) bool {
 	if err == redis.Nil {
 		return true
@@ -24,10 +31,12 @@ func IsNotExistError(err error) bool {
 	return false
 }
 
+// GetLastRedisClient ...
 func GetLastRedisClient() *RedisClient {
 	return lastRdsClient
 }
 
+// NewRedisClient ...
 func NewRedisClient(addr string, pass string, db int, panicIfDisconnect bool) *RedisClient {
 	redisClient := &RedisClient{
 		addr: addr,
@@ -41,7 +50,9 @@ func NewRedisClient(addr string, pass string, db int, panicIfDisconnect bool) *R
 			IdleTimeout:        7 * time.Second,
 			IdleCheckFrequency: 5 * time.Second,
 		}),
-		keepAliveInterval: 2 * time.Second,
+		KeepAliveInterval: 2 * time.Second,
+		ctx:               context.Background(),
+		timeout:           2 * time.Second,
 	}
 	go func() {
 		redisClient.doKeepAliveInterval(panicIfDisconnect)
@@ -51,10 +62,12 @@ func NewRedisClient(addr string, pass string, db int, panicIfDisconnect bool) *R
 	return lastRdsClient
 }
 
-func (p *RedisClient) doKeepAliveInterval(panicIfDisconnect bool) {
+func (r *RedisClient) doKeepAliveInterval(panicIfDisconnect bool) {
 	for {
-		<-time.After(p.keepAliveInterval)
-		statCmd := p.session.Ping()
+		<-time.After(r.KeepAliveInterval)
+		ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+		defer cancel()
+		statCmd := r.session.Ping(ctx)
 		if nil != statCmd && nil != statCmd.Err() && panicIfDisconnect {
 			fmt.Printf("redis keep alived failed:%v\n", statCmd.Err())
 			panic(statCmd.Err)
@@ -62,36 +75,32 @@ func (p *RedisClient) doKeepAliveInterval(panicIfDisconnect bool) {
 	}
 }
 
-/**
- * 模糊查询 key
- */
-func (p *RedisClient) Keys(pattern string) (vals []string, err error) {
-	result := p.session.Keys(pattern)
+// Keys FuzzyQuery
+func (r *RedisClient) Keys(pattern string) (vals []string, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	result := r.session.Keys(ctx, pattern)
 	err = result.Err()
 	vals = result.Val()
 	return
 }
 
-/**
- * 批量设置
- * vals : len(vals) 必定等于 len(keys)
- * err : redis.Nil, key对应的数据不存在
- */
-func (p *RedisClient) MSet(vals []interface{}) (string, error) {
-	result := p.session.MSet(vals...)
+// MSet Batch Set
+func (r *RedisClient) MSet(vals []interface{}) (string, error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	result := r.session.MSet(ctx, vals...)
 	return result.Result()
 }
 
-/**
- * 批量获取
- * vals : len(vals) 必定等于 len(keys)
- * err : redis.Nil, key对应的数据不存在
- */
-func (p *RedisClient) Get(keys []string) (vals []string, err error) {
-	// *StringCmd
+// Get Batch Get
+func (r *RedisClient) Get(keys []string) (vals []string, err error) {
+	//  *StringCmd
 	vals = make([]string, len(keys))
 	for idx := range keys {
-		stringCmd := p.session.Get(keys[idx])
+		ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+		defer cancel()
+		stringCmd := r.session.Get(ctx, keys[idx])
 		if nil != stringCmd.Err() {
 			err = stringCmd.Err()
 		}
@@ -100,167 +109,189 @@ func (p *RedisClient) Get(keys []string) (vals []string, err error) {
 	return
 }
 
-func (p *RedisClient) MGet(keys []string) (vals []interface{}, err error) {
-	Cmd := p.session.MGet(keys...)
+// MGet ...
+func (r *RedisClient) MGet(keys []string) (vals []interface{}, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	Cmd := r.session.MGet(ctx, keys...)
 	return Cmd.Result()
 }
 
-/**
- * 设置
- * expiration : Zero expiration means the key has no expiration time.
- *
- */
-func (p *RedisClient) Set(key string, val string, second int) (result string, err error) {
-	intCmd := p.session.Set(key, val, time.Duration(second)*time.Second)
+// Set ...
+func (r *RedisClient) Set(key string, val string, expire int) (result string, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.Set(ctx, key, val, time.Duration(expire)*time.Second)
 	result, err = intCmd.Result()
 	return
 }
 
-func (p *RedisClient) SetAdd(key string, vals []interface{}) (result int64, err error) {
-	intCmd := p.session.SAdd(key, vals...)
+// SetAdd ...
+func (r *RedisClient) SetAdd(key string, vals []interface{}) (result int64, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.SAdd(ctx, key, vals...)
 	result, err = intCmd.Result()
 	return
 }
 
-func (p *RedisClient) SetNx(key string, val string, second int) (result bool, err error) {
-	intCmd := p.session.SetNX(key, val, time.Duration(second)*time.Second)
+// SetNx ...
+func (r *RedisClient) SetNx(key string, val string, expire int) (result bool, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.SetNX(ctx, key, val, time.Duration(expire)*time.Second)
 	result, err = intCmd.Result()
 	return
 }
 
-func (c *RedisClient) HSet(key string, field string, val interface{}) (bool, error) {
-	return c.session.HSet(key, field, val).Result()
+// HSet ...
+func (r *RedisClient) HSet(key string, field string, val interface{}) (int64, error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	return r.session.HSet(ctx, key, field, val).Result()
 }
 
-func (c *RedisClient) HDel(key string, fields ...string) (int64, error) {
-	return c.session.HDel(key, fields...).Result()
+// HDel ...
+func (r *RedisClient) HDel(key string, fields ...string) (int64, error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	return r.session.HDel(ctx, key, fields...).Result()
 }
 
-func (c *RedisClient) HGet(key string, field string) (string, error) {
-	return c.session.HGet(key, field).Result()
+// HGet ...
+func (r *RedisClient) HGet(key string, field string) (string, error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	return r.session.HGet(ctx, key, field).Result()
 }
 
-func (c *RedisClient) HGetAll(key string) (map[string]string, error) {
-	return c.session.HGetAll(key).Result()
+// HGetAll ...
+func (r *RedisClient) HGetAll(key string) (map[string]string, error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	return r.session.HGetAll(ctx, key).Result()
 }
 
-func (c *RedisClient) HKeys(key string) ([]string, error) {
-	return c.session.HKeys(key).Result()
+// HKeys ...
+func (r *RedisClient) HKeys(key string) ([]string, error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	return r.session.HKeys(ctx, key).Result()
 }
 
-/**
- * 单个获取
- * err : { key对应的数据不存在 => redis.Nil, 其他redis错误 => err }
- */
-func (p *RedisClient) GetOne(key string) (string, error) {
-	stringCmd := p.session.Get(key)
+// GetOne ...
+func (r *RedisClient) GetOne(key string) (string, error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	stringCmd := r.session.Get(ctx, key)
 	result, err := stringCmd.Result()
 	return result, err
 }
 
-/**
- * 单个删除
- * int64 : >0, 成功删除1个Key对应的数据
- * err : if nil ==> 成功提交redis并成功执行返回
- */
-func (p *RedisClient) DelOne(key string) (result int64, err error) {
-	intCmd := p.session.Del(key)
+// DelOne ...
+func (r *RedisClient) DelOne(key string) (result int64, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.Del(ctx, key)
 	result, err = intCmd.Result()
 	return
 }
 
-/**
- * 队列压入
- */
-func (p *RedisClient) LPush(key string, val string) (result int64, err error) {
-	intCmd := p.session.LPush(key, val)
+// LPush ...
+func (r *RedisClient) LPush(key string, val string) (result int64, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.LPush(ctx, key, val)
 	result, err = intCmd.Result()
 	return
 }
 
-/**
- * 队列抛出
- */
-func (p *RedisClient) RPop(key string) (result string, err error) {
-	intCmd := p.session.RPop(key)
+// RPop ...
+func (r *RedisClient) RPop(key string) (result string, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.RPop(ctx, key)
 	result, err = intCmd.Result()
 	return
 }
 
-/**
- * 队列长度
- */
-func (p *RedisClient) LLen(key string) (result int64, err error) {
-	intCmd := p.session.LLen(key)
+// LLen ...
+func (r *RedisClient) LLen(key string) (result int64, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.LLen(ctx, key)
 	result, err = intCmd.Result()
 	return
 }
 
-/**
- * 队列裁剪
- */
-func (p *RedisClient) LTrim(key string, start int64, end int64) (result string, err error) {
-	intCmd := p.session.LTrim(key, start, end)
+// LTrim ...
+func (r *RedisClient) LTrim(key string, start int64, end int64) (result string, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.LTrim(ctx, key, start, end)
 	result, err = intCmd.Result()
 	return
 }
 
-/**
- * 获取队列里多个值
- */
-func (p *RedisClient) LRange(key string, start int64, end int64) (result []string, err error) {
-	stringsliceCmd := p.session.LRange(key, start, end)
+// LRange ...
+func (r *RedisClient) LRange(key string, start int64, end int64) (result []string, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	stringsliceCmd := r.session.LRange(ctx, key, start, end)
 	result, err = stringsliceCmd.Result()
 	return
 }
 
-/**
- * bool : true, key对应的数据得到了更新
- *        false，没有key对应的数据
- * err : if nil ==> 成功提交redis并成功执行返回
- */
-func (p *RedisClient) Expire(key string, expiration time.Duration) (result bool, err error) {
-	boolCmd := p.session.Expire(key, expiration)
+// Expire ...
+func (r *RedisClient) Expire(key string, expiration time.Duration) (result bool, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	boolCmd := r.session.Expire(ctx, key, expiration)
 	result, err = boolCmd.Result()
 	return
 }
 
-/**
- * int64 : >0, key对应的数值型数据incr后的结果
- *          0, key对应的数据非数值
- * err : if nil ==> 成功提交redis并成功执行返回
- */
-func (p *RedisClient) Publish(ch string, msg string) (result int64, err error) {
-	intCmd := p.session.Publish(ch, msg)
+// Publish ...
+func (r *RedisClient) Publish(ch string, msg string) (result int64, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.Publish(ctx, ch, msg)
 	result, err = intCmd.Result()
 	return
 }
 
-/**
- * int64 : >0, key对应的数值型数据incr后的结果
- *          0, key对应的数据非数值
- * err : if nil ==> 成功提交redis并成功执行返回 or key对应的数据非数值
- */
-func (p *RedisClient) Incr(key string) (result int64, err error) {
-	intCmd := p.session.Incr(key)
+// Incr ...
+func (r *RedisClient) Incr(key string) (result int64, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.Incr(ctx, key)
 	result, err = intCmd.Result()
 	return
 }
 
-func (p *RedisClient) TTL(key string) (result time.Duration, err error) {
-	intCmd := p.session.TTL(key)
+// TTL ...
+func (r *RedisClient) TTL(key string) (result time.Duration, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.TTL(ctx, key)
 	result, err = intCmd.Result()
 	return
 }
 
-func (p *RedisClient) SRem(key string, members []interface{}) (result int64, err error) {
-	intCmd := p.session.SRem(key, members...)
+// SRem ...
+func (r *RedisClient) SRem(key string, members []interface{}) (result int64, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	intCmd := r.session.SRem(ctx, key, members...)
 	result, err = intCmd.Result()
 	return
 }
 
-func (p *RedisClient) SMembers(key string) (result []string, err error) {
-	stringCmd := p.session.SMembers(key)
+// SMembers ...
+func (r *RedisClient) SMembers(key string) (result []string, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	stringCmd := r.session.SMembers(ctx, key)
 	result, err = stringCmd.Result()
 	return
 }
