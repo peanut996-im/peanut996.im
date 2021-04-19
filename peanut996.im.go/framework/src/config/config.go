@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"framework/file"
 	"io/ioutil"
 	"log"
@@ -41,4 +42,9 @@ func GetSrvConfig(filePath string) (config *SrvConfig, err error) {
 		log.Fatal("Get Server SrvConfig Failed. Error: ", err)
 	}
 	return config, err
+}
+
+// GetRedisAddr printf the redis addr from srvconfig
+func GetRedisAddr(config *SrvConfig) string {
+	return fmt.Sprintf("%v:%v", config.Redis.Host, config.Redis.Port)
 }
