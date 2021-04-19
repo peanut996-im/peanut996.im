@@ -25,17 +25,16 @@ var (
 )
 
 func init() {
-	config, err := config.GetSrvConfig("../../etc/config-example.yaml")
+	cfg, err := config.GetSrvConfig("../../etc/config-example.yaml")
 	if nil != err {
 		panic("get config error")
 	}
-	client, err := NewMongoClient(config.Mongo.Host, config.Mongo.Port, config.Mongo.DB, config.Mongo.DB, config.Mongo.Passwd)
+	client, err := NewMongoClient(cfg.Mongo.Host, cfg.Mongo.Port, cfg.Mongo.DB, cfg.Mongo.DB, cfg.Mongo.Passwd)
 	if err != nil {
 		panic(err)
 	}
 	mongoClient = client
-	mongoConfig = config
-
+	mongoConfig = cfg
 }
 func TestGetMongoClient(t *testing.T) {
 	type args struct {

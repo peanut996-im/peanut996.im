@@ -103,7 +103,7 @@ func (m *MongoClient) GetCollectionHandle(collection string) *mongo.Collection {
 }
 
 //Find ...
-func (m *MongoClient) Find(collection string, value, filter interface{},
+func (m *MongoClient) Find(collection string, val, filter interface{},
 	opts ...*options.FindOptions) error {
 	ctx, cancel := context.WithTimeout(m.ctx, m.timeout)
 	defer cancel()
@@ -112,7 +112,7 @@ func (m *MongoClient) Find(collection string, value, filter interface{},
 	if err != nil {
 		panic(err)
 	}
-	err = cursor.All(ctx, value)
+	err = cursor.All(ctx, val)
 	if nil != err {
 		return err
 	}
@@ -120,39 +120,39 @@ func (m *MongoClient) Find(collection string, value, filter interface{},
 }
 
 //FindOne ...
-func (m *MongoClient) FindOne(collection string, value, filter interface{},
+func (m *MongoClient) FindOne(collection string, val, filter interface{},
 	opts ...*options.FindOneOptions) error {
 	ctx, cancel := context.WithTimeout(m.ctx, m.timeout)
 	defer cancel()
 	singleResult := m.GetCollectionHandle(collection).FindOne(ctx, filter, opts...)
-	return singleResult.Decode(value)
+	return singleResult.Decode(val)
 }
 
 //FindOneAndDelete ...
-func (m *MongoClient) FindOneAndDelete(collection string, value, filter interface{},
+func (m *MongoClient) FindOneAndDelete(collection string, val, filter interface{},
 	opts ...*options.FindOneAndDeleteOptions) error {
 	ctx, cancel := context.WithTimeout(m.ctx, m.timeout)
 	defer cancel()
 	singleResult := m.GetCollectionHandle(collection).FindOneAndDelete(ctx, filter, opts...)
-	return singleResult.Decode(value)
+	return singleResult.Decode(val)
 }
 
 //FindOneAndUpdate ...
-func (m *MongoClient) FindOneAndUpdate(collection string, value, filter,
+func (m *MongoClient) FindOneAndUpdate(collection string, val, filter,
 	update interface{}, opts ...*options.FindOneAndUpdateOptions) error {
 	ctx, cancel := context.WithTimeout(m.ctx, m.timeout)
 	defer cancel()
 	singleResult := m.GetCollectionHandle(collection).FindOneAndUpdate(ctx, filter, update, opts...)
-	return singleResult.Decode(value)
+	return singleResult.Decode(val)
 }
 
 //FindOneAndReplace ...
-func (m *MongoClient) FindOneAndReplace(collection string, value, filter,
+func (m *MongoClient) FindOneAndReplace(collection string, val, filter,
 	replacement interface{}, opts ...*options.FindOneAndReplaceOptions) error {
 	ctx, cancel := context.WithTimeout(m.ctx, m.timeout)
 	defer cancel()
 	singleResult := m.GetCollectionHandle(collection).FindOneAndReplace(ctx, filter, replacement, opts...)
-	return singleResult.Decode(value)
+	return singleResult.Decode(val)
 }
 
 //InsertMany ...
