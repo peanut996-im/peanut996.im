@@ -17,16 +17,11 @@ type User struct {
 }
 
 var (
-	Client *MongoClient
-	Config *config.SrvConfig
-	// host   = "sz.peanut996.cn"
-	// port   = "27018"
-	// db     = "im"
-	// user   = "im"
-	// passwd = "4pnz6V"
-	user0 = User{"user0", 15}
-	user1 = User{"user1", 30}
-	user2 = User{"user2", 45}
+	mongoClient *MongoClient
+	mongoConfig *config.SrvConfig
+	user0       = User{"user0", 15}
+	user1       = User{"user1", 30}
+	user2       = User{"user2", 45}
 )
 
 func init() {
@@ -38,8 +33,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	Client = client
-	Config = config
+	mongoClient = client
+	mongoConfig = config
 
 }
 func TestGetMongoClient(t *testing.T) {
@@ -57,11 +52,11 @@ func TestGetMongoClient(t *testing.T) {
 		wantErr    bool
 	}{
 		{"case1", args{
-			host:   Config.Mongo.Host,
-			port:   Config.Mongo.Port,
-			db:     Config.Mongo.DB,
-			user:   Config.Mongo.DB,
-			passwd: Config.Mongo.Passwd}, Client, false},
+			host:   mongoConfig.Mongo.Host,
+			port:   mongoConfig.Mongo.Port,
+			db:     mongoConfig.Mongo.DB,
+			user:   mongoConfig.Mongo.DB,
+			passwd: mongoConfig.Mongo.Passwd}, mongoClient, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -81,7 +76,7 @@ func TestMongoClient_GetAllDatabaseNames(t *testing.T) {
 		wantNameSlice []string
 		wantErr       bool
 	}{
-		{"case 0", Client, []string{"im"}, false},
+		{"case 0", mongoClient, []string{"im"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -104,7 +99,7 @@ func TestMongoClient_GetAllCollectionNames(t *testing.T) {
 		wantCollectionSlice []string
 		wantErr             bool
 	}{
-		{"case0", Client, []string{"user", "log"}, false},
+		{"case0", mongoClient, []string{"user", "log"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -127,7 +122,7 @@ func TestMongoClient_GetCollectionHandle(t *testing.T) {
 		args args
 		want *mongo.Collection
 	}{
-		{"case0", Client, args{
+		{"case0", mongoClient, args{
 			collection: "im",
 		},
 			nil,
@@ -154,7 +149,7 @@ func TestMongoClient_InsertOne(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{
+		{"case0", mongoClient, args{
 			"user", user0, nil,
 		}, false},
 	}
@@ -182,7 +177,7 @@ func TestMongoClient_InsertMany(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{
+		{"case0", mongoClient, args{
 			"user", users,
 			nil,
 		}, false},
@@ -215,7 +210,7 @@ func TestMongoClient_UpdateByID(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{
+		{"case0", mongoClient, args{
 			"user", id, update, nil,
 		}, false},
 	}
@@ -249,7 +244,7 @@ func TestMongoClient_UpdateOne(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", filter, update, nil}, false},
+		{"case0", mongoClient, args{"user", filter, update, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -284,7 +279,7 @@ func TestMongoClient_UpdateMany(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", filter, update, nil}, false},
+		{"case0", mongoClient, args{"user", filter, update, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -320,7 +315,7 @@ func TestMongoClient_ReplaceOne(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"name", Client, args{"user", filter, replacement, nil}, false},
+		{"name", mongoClient, args{"user", filter, replacement, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -347,7 +342,7 @@ func TestMongoClient_FindOne(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", &u, filter, nil}, false},
+		{"case0", mongoClient, args{"user", &u, filter, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -373,7 +368,7 @@ func TestMongoClient_FindOneAndDelete(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", &u, filter, nil}, false},
+		{"case0", mongoClient, args{"user", &u, filter, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -405,7 +400,7 @@ func TestMongoClient_FindOneAndUpdate(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", &u, filter, update, nil}, false},
+		{"case0", mongoClient, args{"user", &u, filter, update, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -436,7 +431,7 @@ func TestMongoClient_FindOneAndReplace(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", &u, filter, replacement, nil}, false},
+		{"case0", mongoClient, args{"user", &u, filter, replacement, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -467,7 +462,7 @@ func TestMongoClient_Find(t *testing.T) {
 		m    *MongoClient
 		args args
 	}{
-		{"case0", Client, args{
+		{"case0", mongoClient, args{
 			collection: "im",
 			value:      &users,
 			filter:     filter,
@@ -497,7 +492,7 @@ func TestMongoClient_DeleteOne(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", filter, nil}, false},
+		{"case0", mongoClient, args{"user", filter, nil}, false},
 	}
 
 	for _, tt := range tests {
@@ -531,7 +526,7 @@ func TestMongoClient_DeleteMany(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"case0", Client, args{"user", filter, nil}, false},
+		{"case0", mongoClient, args{"user", filter, nil}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
