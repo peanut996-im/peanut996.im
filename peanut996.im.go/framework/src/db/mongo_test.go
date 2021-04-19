@@ -34,7 +34,7 @@ func init() {
 	if nil != err {
 		panic("get config error")
 	}
-	client, err := GetMongoClient(config.Mongo.Host, config.Mongo.Port, config.Mongo.DB, config.Mongo.DB, config.Mongo.Passwd)
+	client, err := NewMongoClient(config.Mongo.Host, config.Mongo.Port, config.Mongo.DB, config.Mongo.DB, config.Mongo.Passwd)
 	if err != nil {
 		panic(err)
 	}
@@ -57,21 +57,18 @@ func TestGetMongoClient(t *testing.T) {
 		wantErr    bool
 	}{
 		{"case1", args{
-			host:   "",
-			port:   "",
-			db:     "",
-			user:   "",
-			passwd: "4pnz6V"}, Client, false},
+			host:   Config.Mongo.Host,
+			port:   Config.Mongo.Port,
+			db:     Config.Mongo.DB,
+			user:   Config.Mongo.DB,
+			passwd: Config.Mongo.Passwd}, Client, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotClient, err := GetMongoClient(tt.args.host, tt.args.port, tt.args.db, tt.args.user, tt.args.passwd)
+			_, err := NewMongoClient(tt.args.host, tt.args.port, tt.args.db, tt.args.user, tt.args.passwd)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetMongoClient() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(gotClient, tt.wantClient) {
-				t.Errorf("GetMongoClient() = %v, want %v", gotClient, tt.wantClient)
 			}
 		})
 	}
