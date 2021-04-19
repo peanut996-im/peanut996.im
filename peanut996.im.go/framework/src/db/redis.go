@@ -15,11 +15,12 @@ var (
 // RedisClient ...
 type RedisClient struct {
 	addr              string
-	pass              string
+	port              string
+	passwd            string
 	db                int
 	session           *redis.Client
 	ctx               context.Context
-	KeepAliveInterval time.Duration //  second
+	keepAliveInterval time.Duration //  second
 	timeout           time.Duration
 }
 
@@ -37,20 +38,20 @@ func GetLastRedisClient() *RedisClient {
 }
 
 // NewRedisClient ...
-func NewRedisClient(addr string, pass string, db int, panicIfDisconnect bool) *RedisClient {
+func NewRedisClient(addr string, passwd string, db int, panicIfDisconnect bool) *RedisClient {
 	redisClient := &RedisClient{
-		addr: addr,
-		pass: pass,
-		db:   db,
+		addr:   addr,
+		passwd: passwd,
+		db:     db,
 		session: redis.NewClient(&redis.Options{
 			Addr:               addr,
-			Password:           pass,
+			Password:           passwd,
 			DB:                 db,
 			PoolSize:           0xFF,
 			IdleTimeout:        7 * time.Second,
 			IdleCheckFrequency: 5 * time.Second,
 		}),
-		KeepAliveInterval: 2 * time.Second,
+		keepAliveInterval: 2 * time.Second,
 		ctx:               context.Background(),
 		timeout:           2 * time.Second,
 	}
@@ -64,7 +65,7 @@ func NewRedisClient(addr string, pass string, db int, panicIfDisconnect bool) *R
 
 func (r *RedisClient) doKeepAliveInterval(panicIfDisconnect bool) {
 	for {
-		<-time.After(r.KeepAliveInterval)
+		<-time.After(r.keepAliveInterval)
 		ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
 		defer cancel()
 		statCmd := r.session.Ping(ctx)
@@ -94,18 +95,14 @@ func (r *RedisClient) MSet(vals []interface{}) (string, error) {
 }
 
 // Get Batch Get
-func (r *RedisClient) Get(keys []string) (vals []string, err error) {
-	//  *StringCmd
-	vals = make([]string, len(keys))
-	for idx := range keys {
-		ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
-		defer cancel()
-		stringCmd := r.session.Get(ctx, keys[idx])
-		if nil != stringCmd.Err() {
-			err = stringCmd.Err()
-		}
-		vals[idx] = stringCmd.Val()
+func (r *RedisClient) Get(key string) (val string, err error) {
+	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+	defer cancel()
+	cmd := r.session.Get(ctx, key)
+	if nil != cmd.Err() {
+		err = cmd.Err()
 	}
+	val = cmd.Val()
 	return
 }
 
@@ -137,6 +134,7 @@ func (r *RedisClient) SetAdd(key string, vals []interface{}) (result int64, err 
 
 // SetNx ...
 func (r *RedisClient) SetNx(key string, val string, expire int) (result bool, err error) {
+	// result mean whether the key exist.
 	ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
 	defer cancel()
 	intCmd := r.session.SetNX(ctx, key, val, time.Duration(expire)*time.Second)
