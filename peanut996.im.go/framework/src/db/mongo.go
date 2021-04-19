@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,7 +11,6 @@ import (
 )
 
 var (
-	once            sync.Once
 	lastMongoClient *MongoClient
 )
 
@@ -28,15 +26,17 @@ type MongoClient struct {
 	timeout time.Duration
 }
 
-//GetMongoClient ...
-func GetMongoClient(host, port, db, user, passwd string) (client *MongoClient, err error) {
-	once.Do(func() {
-		client, err = NewMongoClient(host, port, db, user, passwd)
-		if nil == err {
-			lastMongoClient = client
-		}
-	})
-	return lastMongoClient, err
+//IsNoDocumentError ...
+func IsNoDocumentError(err error) bool {
+	if err == mongo.ErrNoDocuments {
+		return true
+	}
+	return false
+}
+
+//GetlastMongoClient ...
+func GetlastMongoClient() *MongoClient {
+	return lastMongoClient
 }
 
 //NewMongoClient ...
@@ -69,6 +69,7 @@ func NewMongoClient(host, port, db, user, passwd string) (mongoClient *MongoClie
 		timeout: 10 * time.Second,
 		session: mongoSession,
 	}
+	lastMongoClient = mongoClient
 	return mongoClient, nil
 }
 
