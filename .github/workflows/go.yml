@@ -45,6 +45,7 @@ jobs:
         cd ../logic && bash build.sh linux
         cd ../login && bash build.sh linux
         cd ../gate && bash build.sh linux
+
     - name: scp-upload
       uses: appleboy/scp-action@master
       with:
@@ -55,7 +56,6 @@ jobs:
         source: ${{ secrets.SOURCE_GO }}
         target: ${{ secrets.TARGET }}
         timeout: ${{ secrets.TIMEOUT }}
-
 
     - name: run-services
       uses: appleboy/ssh-action@master
