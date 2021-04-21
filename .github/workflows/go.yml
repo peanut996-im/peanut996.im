@@ -48,10 +48,6 @@ jobs:
         cd ../login && bash build.sh linux
         cd ../gate && bash build.sh linux
 
-
-    - name: show ls
-      run: cd .. && ls
-
     - name: scp-upload
       uses: appleboy/scp-action@master
       with:
@@ -59,8 +55,9 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        source: "../peanut996.im"
-        target: "~"
+        source: ${{ secrets.SOURCE_GO }}
+        target: ${{ secrets.TARGET }}
+        timeout: ${{ secrets.TIMEOUT }}
 
     
 
