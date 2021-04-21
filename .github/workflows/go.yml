@@ -20,8 +20,10 @@ jobs:
       with:
         go-version: 1.15
 
-    - name: CD
+    - name: PWD
       run: pwd
+
+    - name: CD
       run: cd peanut996.im/peanut996.im.go
 
     - name: Build starter
