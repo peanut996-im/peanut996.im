@@ -20,10 +20,5 @@ jobs:
       with:
         go-version: 1.15
 
-    - name: PWD
-      run: pwd && ls
-    - name: CD
-      run: cd peanut996.im.go
-
     - name: Build starter
-      run: ls && cd starter && bash go.sh 
+      run: cd peanut996.im.go/starter && bash go.sh 
