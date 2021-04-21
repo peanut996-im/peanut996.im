@@ -23,7 +23,7 @@ jobs:
     - name: PWD
       run: pwd && ls
     - name: CD
-      run: cd peanut996.im/peanut996.im.go
+      run: cd peanut996.im.go
 
     - name: Build starter
       run: cd starter && bash go.sh 
