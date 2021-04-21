@@ -7,7 +7,6 @@ var (
 )
 
 func main() {
-	fmt.Println("Build Info:")
 	fmt.Println("Build Version: ", BuildVersion)
 	fmt.Println("Build Time: ", BuildTime)
 	fmt.Println("Build Machine: ", BuildMachine)
