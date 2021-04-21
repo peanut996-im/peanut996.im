@@ -26,4 +26,4 @@ jobs:
       run: cd peanut996.im.go
 
     - name: Build starter
-      run: cd starter && bash go.sh 
+      run: ls && cd starter && bash go.sh 
