@@ -2,7 +2,7 @@ name: Go
 
 on:
   push:
-    branches: [ backend ]
+    branches: [ backend,feature/workflow]
   pull_request:
     branches: [ backend ]
 
