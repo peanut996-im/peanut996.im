@@ -48,7 +48,7 @@ jobs:
         cd ../login && bash build.sh linux
         cd ../gate && bash build.sh linux
 
-    - name: scp-upload-and-run
+    - name: scp-upload
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.HOST }}
@@ -58,10 +58,13 @@ jobs:
         source: ${{ secrets.SOURCE_GO }}
         target: ${{ secrets.TARGET }}
         timeout: ${{ secrets.TIMEOUT }}
+
+
+    - name: run-services
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
         script: ${{ secrets.RUNGO }}
-
-
-    
-
-
-
