@@ -20,5 +20,15 @@ jobs:
       with:
         go-version: 1.15
 
-    - name: Build starter
+    - name: build-starter
       run: cd peanut996.im.go/starter && bash go.sh 
+
+    - name: build-logic
+      run: cd peanut996.im.go/logic && bash go.sh
+
+    - name: build-login
+      run: cd peanut996.im.go/login && bash go.sh  
+    
+    - name: build-gate
+      run: cd peanut996.im.go/gate && bash go.sh  
+
