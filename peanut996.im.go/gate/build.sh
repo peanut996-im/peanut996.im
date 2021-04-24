@@ -30,11 +30,11 @@ GIT_VERSION=$(git log --pretty=format:"%h" -1)
 BuildVersion="${GIT_BRANCH}_${GIT_VERSION}"
 BuildTimeStamp=`date +%s`
 if [ ${targetos} = "windows" ]; then
-    BuildMachine=$(ipconfig |grep "IPv4" |grep -v "192.168.2.1"| grep -v "127.0.0.1"| grep -v "localhost" | awk -F':' '{print $2}'|grep -o "[^ ]\+\( \+[^ ]\+\)*")
+    BuildMachine=$(ipconfig |grep "IPv4" |grep -v "192.168.2.1"| grep -v "127.0.0.1"| grep -v "localhost" | awk -F':' '{print $2}'| head -n 1 |grep -o "[^ ]\+\( \+[^ ]\+\)*" )
 elif [ "$(ls /sbin/ | grep ifconfig)" = "ifconfig" ] ;then
-    BuildMachine=$(/sbin/ifconfig | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}'| tr "\n" " "| grep -o "[^ ]\+\( \+[^ ]\+\)*")
+    BuildMachine=$(/sbin/ifconfig | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}' | head -n1 | tr "\n" " "| grep -o "[^ ]\+\( \+[^ ]\+\)*")
 else
-    BuildMachine=$(ip addr | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}' | awk -F'/' '{print $1}' | head -n1)
+    BuildMachine=$(ip addr | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}' | awk -F'/' '{print $1}')
 fi
 
 
@@ -43,8 +43,17 @@ BuildMachine="$(uname -n)@${BuildMachine}"
 rm -f ./bin/*${appName}*
 cd ./src
 
-## 编译参数
-go build  -ldflags "-X main.BuildVersion=${BuildVersion} -X main.BuildUser=${BuildUser} -X main.BuildTime=${BuildTime} -X main.BuildMachine=${BuildMachine} " -o ../bin/${appName} .
+echo "BuildInfo: "
+echo "main.BuildVersion=${BuildVersion}"
+echo "main.BuildUser=${BuildUser}"
+echo "main.BuildTime=${BuildTime}"
+echo "main.BuildMachine=${BuildMachine}"
+echo ""
+
+BuildFlags='-X "main.BuildVersion='${BuildVersion}'" -X "main.BuildUser='${BuildUser}'" -X "main.BuildTime='${BuildTime}'" -X "main.BuildMachine='${BuildMachine}'"'
+
+## build
+go build  -ldflags "${BuildFlags}" -o ../bin/${appName} .
 
 if [ ${targetos} = "windows" ];then
     cd ../bin
