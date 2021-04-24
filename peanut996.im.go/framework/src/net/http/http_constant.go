@@ -1,5 +1,7 @@
 package http
 
+type HTTPMethod string
+
 const (
 	// Method
 	HTTP_METHOD_GET    string = "GET"
