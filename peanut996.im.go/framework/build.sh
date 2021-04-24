@@ -43,11 +43,10 @@ BuildMachine="$(uname -n)@${BuildMachine}"
 rm -f ./bin/*${appName}*
 cd ./src
 
-echo "BuildInfo: "
-echo "main.BuildVersion=${BuildVersion}"
-echo "main.BuildUser=${BuildUser}"
-echo "main.BuildTime=${BuildTime}"
-echo "main.BuildMachine=${BuildMachine}"
+echo "BuildVersion=${BuildVersion}"
+echo "BuildUser=${BuildUser}"
+echo "BuildTime=${BuildTime}"
+echo "BuildMachine=${BuildMachine}"
 echo ""
 
 BuildFlags='-X "main.BuildVersion='${BuildVersion}'" -X "main.BuildUser='${BuildUser}'" -X "main.BuildTime='${BuildTime}'" -X "main.BuildMachine='${BuildMachine}'"'
