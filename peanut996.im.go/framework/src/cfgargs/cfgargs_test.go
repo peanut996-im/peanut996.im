@@ -1,4 +1,4 @@
-package config
+package cfgargs
 
 import (
 	"framework/file"
