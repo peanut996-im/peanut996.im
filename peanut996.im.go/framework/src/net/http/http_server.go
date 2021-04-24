@@ -1,18 +1,22 @@
 package http
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 //Server ...
 type Server struct {
 	session *gin.Engine
-	router  map[string]map[string]interface{}
+	router  map[string]map[string]http.Handler
 }
 
-//NewServer ...
+// NewServer ...
 func NewServer() *Server {
 	return &Server{
 		session: gin.Default(),
-		router: map[string]map[string]interface{}{
+		router: map[string]map[string]http.Handler{
 			"GET":  nil,
 			"POST": nil,
 		},
