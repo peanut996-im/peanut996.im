@@ -52,7 +52,7 @@ type Redis struct {
 	DB     int    `yaml:"db"`
 }
 
-func InitSrvCfg(build *Build) (*SrvConfig, error) {
+func InitSrvCfg(build *Build, flagParse func()) (*SrvConfig, error) {
 	srvCfg := newSrvConfig()
 	if nil != build {
 		srvCfg.Build = *build
@@ -62,6 +62,10 @@ func InitSrvCfg(build *Build) (*SrvConfig, error) {
 
 	flag.StringVar(&yamlPath, "c", "./etc/config-local.yaml", "App configuration file. Relative to the path of repository.")
 	flag.StringVar(&yamlPath, "config", "./etc/config-local.yaml", "App configuration file. Relative to the path of repository.")
+
+	if nil != flagParse {
+		flagParse()
+	}
 	flag.Parse()
 
 	if err := srvCfg.loadLocalYaml(yamlPath); err != nil {
