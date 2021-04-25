@@ -24,7 +24,7 @@ const (
 )
 
 const logTimeFMT string = "2006-01-02 15:04:05.999"
-const logFullFMTConst string = "##%v##%-23v##%v##%v##%v"
+const logFullFMTConst string = "%v %-23v %v %v %v"
 
 var logFullFMT string = logFullFMTConst // TIME LEVEL CODE MSG
 var logLevelFMT = []string{"FATAL", "ERROR", "WARN", "INFO", "DEBUG"}
