@@ -1,7 +1,7 @@
 #!/bin/bash
 # author: peanut996
-# date: 2021.3.31
-# description: 编译项目
+# date: 2021.4.25
+# description: 编译项目脚本
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # 编译选项
@@ -30,11 +30,11 @@ GIT_VERSION=$(git log --pretty=format:"%h" -1)
 BuildVersion="${GIT_BRANCH}_${GIT_VERSION}"
 BuildTimeStamp=`date +%s`
 if [ ${targetos} = "windows" ]; then
-    BuildMachine=$(ipconfig |grep "IPv4" |grep -v "192.168.2.1"| grep -v "127.0.0.1"| grep -v "localhost" | awk -F':' '{print $2}'| head -n 1 |grep -o "[^ ]\+\( \+[^ ]\+\)*" )
+    BuildMachine=$(ipconfig |grep "IPv4" |grep -v "192.168.2.1"| grep -v "127.0.0.1"| grep -v "localhost" | head -n 1 | awk -F':' '{print $2}' |grep -o "[^ ]\+\( \+[^ ]\+\)*" )
 elif [ "$(ls /sbin/ | grep ifconfig)" = "ifconfig" ] ;then
-    BuildMachine=$(/sbin/ifconfig | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}' | head -n1 | tr "\n" " "| grep -o "[^ ]\+\( \+[^ ]\+\)*")
+    BuildMachine=$(/sbin/ifconfig | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | head -n 1 | awk '{print $2}' | tr "\n" " "| grep -o "[^ ]\+\( \+[^ ]\+\)*")
 else
-    BuildMachine=$(ip addr | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | awk '{print $2}' | awk -F'/' '{print $1}')
+    BuildMachine=$(ip addr | grep "inet" | grep -v "127.0.0.1" | grep -v "inet6" | head -n 1 | awk '{print $2}' | awk -F'/' '{print $1}')
 fi
 
 
