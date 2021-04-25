@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	cfg, err := cfgargs.InitSrvCfg(nil)
+	cfg, err := cfgargs.InitSrvCfg(nil, nil)
 	if nil != err {
 		panic("get config error")
 	}
