@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	cfg, err := cfgargs.GetSrvConfig("../../etc/config-example.yaml")
+	cfg, err := cfgargs.InitSrvCfg(nil)
 	if nil != err {
 		panic("get config error")
 	}
