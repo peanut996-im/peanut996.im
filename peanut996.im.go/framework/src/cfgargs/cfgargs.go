@@ -14,6 +14,11 @@ type SrvConfig struct {
 	Mongo `yaml:"mongo"`
 	Redis `yaml:"redis"`
 	Log   `yaml:"log"`
+	HTTP  `yaml:"http"`
+}
+
+type HTTP struct {
+	Cors bool `yaml:"cors"`
 }
 
 type Log struct {
