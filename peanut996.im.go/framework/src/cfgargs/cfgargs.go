@@ -1,20 +1,28 @@
 package cfgargs
 
 import (
+	"flag"
 	"fmt"
-	"framework/file"
 	"io/ioutil"
-	"log"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 )
 
 //SrvConfig records for all conf
 type SrvConfig struct {
+	Build
 	Mongo `yaml:"mongo"`
 	Redis `yaml:"redis"`
 	Log   `yaml:"log"`
 	HTTP  `yaml:"http"`
+}
+
+type Build struct {
+	BuildTime    string
+	BuildUser    string
+	BuildVersion string
+	BuildMachine string
 }
 
 type HTTP struct {
@@ -44,17 +52,60 @@ type Redis struct {
 	DB     int    `yaml:"db"`
 }
 
-//GetSrvConfig return a SrvConfig.
-func GetSrvConfig(filePath string) (config *SrvConfig, err error) {
-	configFile, err := ioutil.ReadFile(file.GetAbsPath(filePath))
-	if err != nil {
-		return config, err
+func InitSrvCfg(build *Build) (*SrvConfig, error) {
+	srvCfg := newSrvConfig()
+	if nil != build {
+		srvCfg.Build = *build
 	}
-	err = yaml.Unmarshal(configFile, &config)
+
+	yamlPath := "../../etc/config-local.yaml"
+
+	flag.StringVar(&yamlPath, "c", "./etc/config-local.yaml", "App configuration file. Relative to the path of repository.")
+	flag.StringVar(&yamlPath, "config", "./etc/config-local.yaml", "App configuration file. Relative to the path of repository.")
+	flag.Parse()
+
+	if err := srvCfg.loadLocalYaml(yamlPath); err != nil {
+		return nil, err
+	}
+
+	return srvCfg, nil
+	// yamlPath := flag.String("c", "", "Yaml config file path.(Relative to the path of the executable file)")
+}
+
+func newSrvConfig() *SrvConfig {
+	return &SrvConfig{}
+}
+
+func (s *SrvConfig) loadLocalYaml(path string) error {
+	yamlFile := path
+	data, err := ioutil.ReadFile(yamlFile)
 	if nil != err {
-		log.Fatal("Get Server SrvConfig Failed. Error: ", err)
+		fmt.Printf("load local yaml err:%v path: %v\n", err, yamlFile)
+		return err
 	}
-	return config, err
+
+	err = yaml.Unmarshal([]byte(data), s)
+	if nil != err {
+		fmt.Printf("unmarshal local yaml err:%v path: %v\n", err, yamlFile)
+		return err
+	}
+
+	if "" == s.Log.Level {
+		s.Log.Level = "INFO"
+	}
+
+	s.Log.Level = strings.ToUpper(s.Log.Level)
+	switch s.Log.Level {
+	case "DEBUG":
+	case "INFO":
+	case "WARN":
+	case "ERROR":
+	case "FATAL":
+	default:
+		s.Log.Level = "INFO"
+	}
+
+	return nil
 }
 
 // GetRedisAddr printf the redis addr from srvconfig
