@@ -28,10 +28,7 @@ type MongoClient struct {
 
 //IsNoDocumentError ...
 func IsNoDocumentError(err error) bool {
-	if err == mongo.ErrNoDocuments {
-		return true
-	}
-	return false
+	return err == mongo.ErrNoDocuments
 }
 
 //GetlastMongoClient ...

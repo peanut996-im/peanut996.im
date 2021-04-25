@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.log
 peanut996.im.go/*/bin/
 # Test binary, built with `go test -c`
 *.test

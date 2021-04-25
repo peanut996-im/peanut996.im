@@ -1,7 +1,7 @@
 package db
 
 import (
-	"framework/config"
+	"framework/cfgargs"
 	"reflect"
 	"testing"
 
@@ -18,14 +18,14 @@ type User struct {
 
 var (
 	mongoClient *MongoClient
-	mongoConfig *config.SrvConfig
+	mongoConfig *cfgargs.SrvConfig
 	user0       = User{"user0", 15}
 	user1       = User{"user1", 30}
 	user2       = User{"user2", 45}
 )
 
 func init() {
-	cfg, err := config.GetSrvConfig("../../etc/config-example.yaml")
+	cfg, err := cfgargs.GetSrvConfig("../../etc/config-example.yaml")
 	if nil != err {
 		panic("get config error")
 	}

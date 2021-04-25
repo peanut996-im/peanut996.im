@@ -15,7 +15,6 @@ var (
 // RedisClient ...
 type RedisClient struct {
 	addr              string
-	port              string
 	passwd            string
 	db                int
 	session           *redis.Client
@@ -26,10 +25,7 @@ type RedisClient struct {
 
 // IsNotExistError ...
 func IsNotExistError(err error) bool {
-	if err == redis.Nil {
-		return true
-	}
-	return false
+	return err == redis.Nil
 }
 
 // GetLastRedisClient ...
@@ -67,10 +63,10 @@ func (r *RedisClient) doKeepAliveInterval(panicIfDisconnect bool) {
 	for {
 		<-time.After(r.keepAliveInterval)
 		ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
-		defer cancel()
 		statCmd := r.session.Ping(ctx)
 		if nil != statCmd && nil != statCmd.Err() && panicIfDisconnect {
 			fmt.Printf("redis keep alived failed:%v\n", statCmd.Err())
+			cancel()
 			panic(statCmd.Err)
 		}
 	}

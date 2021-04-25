@@ -1,4 +1,4 @@
-package config
+package cfgargs
 
 import (
 	"fmt"
@@ -13,6 +13,19 @@ import (
 type SrvConfig struct {
 	Mongo `yaml:"mongo"`
 	Redis `yaml:"redis"`
+	Log   `yaml:"log"`
+	HTTP  `yaml:"http"`
+}
+
+type HTTP struct {
+	Cors bool `yaml:"cors"`
+}
+
+type Log struct {
+	Level   string `yaml:"level"`
+	Console bool   `yaml:"console"`
+	Path    string `yaml:"path"`
+	Sync    bool   `yaml:"sync"`
 }
 
 //Mongo conf for mongoDB

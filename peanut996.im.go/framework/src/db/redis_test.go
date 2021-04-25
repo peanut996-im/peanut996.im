@@ -1,7 +1,7 @@
 package db
 
 import (
-	"framework/config"
+	"framework/cfgargs"
 	"reflect"
 	"testing"
 	"time"
@@ -9,15 +9,15 @@ import (
 
 var (
 	redisClient *RedisClient
-	redisConfig *config.SrvConfig
+	redisConfig *cfgargs.SrvConfig
 )
 
 func init() {
-	cfg, err := config.GetSrvConfig("../../etc/config-example.yaml")
+	cfg, err := cfgargs.GetSrvConfig("../../etc/config-example.yaml")
 	if nil != err {
 		panic("get config error")
 	}
-	client := NewRedisClient(config.GetRedisAddr(cfg), cfg.Redis.Passwd, cfg.Redis.DB, true)
+	client := NewRedisClient(cfgargs.GetRedisAddr(cfg), cfg.Redis.Passwd, cfg.Redis.DB, true)
 	redisClient = client
 	redisConfig = cfg
 }
