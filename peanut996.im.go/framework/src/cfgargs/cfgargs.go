@@ -12,10 +12,11 @@ import (
 //SrvConfig records for all conf
 type SrvConfig struct {
 	Build
-	Mongo `yaml:"mongo"`
-	Redis `yaml:"redis"`
-	Log   `yaml:"log"`
-	HTTP  `yaml:"http"`
+	AppKey string `yaml:"appkey"`
+	Mongo  `yaml:"mongo"`
+	Redis  `yaml:"redis"`
+	Log    `yaml:"log"`
+	HTTP   `yaml:"http"`
 }
 
 type Build struct {
