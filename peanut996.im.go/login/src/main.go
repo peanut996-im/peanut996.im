@@ -1,8 +1,39 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"framework/api"
+	"framework/cfgargs"
+	"framework/logger"
+	"log"
+	"net/url"
+)
+
+var (
+	BuildVersion, BuildTime, BuildUser, BuildMachine string
+)
 
 func main() {
-	fmt.Println("This is a starter project for peanut996.im")
-	fmt.Println("Please copy and then edit for project.")
+	build := &cfgargs.Build{
+		BuildVersion: BuildVersion,
+		BuildTime:    BuildTime,
+		BuildUser:    BuildUser,
+		BuildMachine: BuildMachine,
+	}
+	srvConfig, err := cfgargs.InitSrvCfg(build, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	logger.InitLogger(srvConfig)
+
+	logger.Info("App login started...")
+
+	vals := url.Values{
+		"name": []string{"Jack"},
+		"age":  []string{"20"},
+	}
+
+	fmt.Println(api.MakeSign(vals, "88888888"))
+
 }
