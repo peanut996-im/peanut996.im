@@ -25,8 +25,4 @@
 
 ## 线上预览
 
-<<<<<<< Updated upstream
-[Home](https://im.peanut996.cn)
-=======
 [Peanut996.IM](https://im.peanut996.cn)
->>>>>>> Stashed changes
