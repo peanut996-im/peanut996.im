@@ -1,0 +1,26 @@
+{
+  "name": "im-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "ready": "npm install && cd im-frontend-index && npm install",
+    "start-dev": "cross-env NODE_ENV=development node src/main.js",
+    "start": "cross-env NODE_ENV=production node src/main.js",
+    "build": "cd im-frontend-index && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "directory": "https://github.com/peanut996-im/im-frontend.git"
+  },
+  "author": "peanut996",
+  "license": "ISC",
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^10.0.0",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "js-cookie": "^2.2.1",
+    "morgan": "^1.10.0"
+  }
+}

@@ -1,0 +1,15 @@
+[submodule "framework"]
+	path = framework
+	url = https://github.com/peanut996-im/framework.git
+[submodule "starter"]
+	path = starter
+	url = https://github.com/peanut996-im/starter.git
+[submodule "gate"]
+	path = gate
+	url = https://github.com/peanut996-im/gate.git
+[submodule "logic"]
+	path = logic
+	url = https://github.com/peanut996-im/logic.git
+[submodule "sso"]
+	path = sso
+	url = https://github.com/peanut996-im/sso.git

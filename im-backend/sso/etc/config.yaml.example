@@ -1,0 +1,25 @@
+log:
+  level: debug
+  sync: true
+  console: true
+  path: ./log/sso.log
+mongo:
+  host: 127.0.0.1
+  port: 27017
+  db: im
+  password: im
+  user: im
+  panic: false
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: 123456
+  db: 0
+  panic: false
+http:
+  port: 5555
+  cors: true
+  release: false
+  sign: true
+
+appkey: YourAPPKeyhere

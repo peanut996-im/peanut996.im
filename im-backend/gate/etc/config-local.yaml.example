@@ -1,0 +1,19 @@
+log:
+  level: debug
+  sync: true
+  console: true
+  path: ./log/gate.log
+http:
+  port: 5557
+  cors: true
+  release: false
+  sign: false
+socket.io:
+  port: 9000
+  cors: true
+logic:
+  host: 127.0.0.1
+  port: 5556
+  mode: http
+  panic: true 
+appkey: YourAPPKeyhere

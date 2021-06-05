@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Peanut996.IM</title>
+    <link rel="stylesheet" href="static/css/index-native.css"/>
+    <link rel="icon" href="static/favicon.png">
+
+</head>
+
+<body>
+<div id="debug-area">
+    <div>
+        <input id="add-friend-input"/>
+        <button id="add-friend-button">AddFriend</button>
+    </div>
+    <div>
+        <input id="delete-friend-input"/>
+        <button id="delete-friend-button">DeleteFriend</button>
+    </div>
+    <div>
+        <input id="create-group-input"/>
+        <button id="create-group-button">CreateGroup</button>
+    </div>
+    <div>
+        <input id="join-group-input"/>
+        <button id="join-group-button">JoinGroup</button>
+    </div>
+    <div>
+        <input id="leave-group-input"/>
+        <button id="leave-group-button">LeaveGroup</button>
+    </div>
+</div>
+<ul id="messages"></ul>
+<form id="form" action="">
+    <input id="input" autocomplete="off"/>
+    <button>Send</button>
+</form>
+<script src="https://cdn.bootcdn.net/ajax/libs/socket.io/2.4.0/socket.io.min.js"></script>
+<script src="static/js/index-native.js" type="module"></script>
+</body>
+
+</html>

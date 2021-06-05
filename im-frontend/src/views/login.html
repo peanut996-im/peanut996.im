@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>IM.Login</title>
+<!--    google fonts proxy -->
+    <link href="https://fonts.loli.net/css?family=Roboto&display=swap" rel="stylesheet"/>
+
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"></script>
+<!--    element-ui-->
+<!--    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">-->
+<!--    <script src="https://unpkg.com/element-ui/lib/index.js"></script>-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ant-design-vue@1.7.5/dist/antd.css">
+    <script src="https://cdn.jsdelivr.net/npm/ant-design-vue@1.7.5/dist/antd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="static/css/login.css"/>
+    <link rel="icon" href="static/favicon.png">
+
+</head>
+<body>
+<div id="app">
+<!--    传递默认gateUrl-->
+    <input style="display: none;" ref="tokenKey" value="<%= tokenKey %>">
+    <input style="display: none;" ref="uidKey" value="<%= uidKey %>">
+    <input style="display: none;" ref="ssoUrl" value="<%= ssoUrl %>">
+    <input style="display: none;" ref="indexUrl" value="<%= indexUrl %>">
+    <input style="display: none;" ref="nodeEnv" value="<%= nodeEnv %>">
+    <input style="display: none;" ref="ssoLogin" value="<%= ssoLogin %>">
+    <div id="login-view">
+        <img src="https://oss.peanut996.cn/img/catalina-background.jpg" id="side-img">
+        <span id="welcome-tips">Welcome Back!</span>
+        <span id="login-tips">Login to your account</span>
+        <button id="login-button" v-on:click="login">
+            <div id="login-button-rectangle">
+                <span id="login-button-span">Login</span>
+            </div>
+        </button>
+        <button id="register-button" v-on:click="register">
+            <div id="register-button-rectangle">
+                <span id="register-button-span">Register</span>
+            </div>
+        </button>
+        <span id="bottom-tips">Dont have an account? Join free today</span>
+
+        <form id="login-form">
+            <span id="login-span-account">Account</span>
+            <input  v-model="account" id="account-form-rectangle">
+            <span id="login-span-password">Password</span>
+            <input id="password-form-rectangle" type="password" v-model="password">
+        </form>
+    </div>
+</div>
+<script src="static/js/login.js" type="module"></script>
+</body>
+</html>

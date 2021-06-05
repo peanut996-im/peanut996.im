@@ -1,0 +1,56 @@
+name: Go
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: set-credit
+      run: |
+        git config --global credential.helper store
+        echo https://${{ secrets.REPO_USERNAME }}:${{ secrets.REPO_PASSWORD }}@github.com > ~/.git-credentials
+    - name: checkout-submodules
+      run: git submodule update --init --recursive
+
+    - name: set-up-go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: build
+      run: |
+        cd starter && bash build.sh linux
+        cd ../logic && bash build.sh linux
+        cd ../sso && bash build.sh linux
+        cd ../gate && bash build.sh linux
+
+    - name: scp-upload
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT }}
+        source: "*"
+        target: "im-backend/"
+        timeout: 600s
+
+    - name: restart services
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.ROOT_USERNAME }}
+        password: ${{ secrets.ROOT_PASSWORD }}
+        port: ${{ secrets.PORT }}
+        script: |
+          systemctl stop im-backend-sso im-backend-gate im-backend-logic
+          systemctl start im-backend-logic im-backend-sso im-backend-gate
+
