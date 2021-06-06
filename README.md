@@ -1,6 +1,4 @@
 # peanut996.im
-[![Frontend](https://github.com/peanut996-im/im-frontend/actions/workflows/node.js.yml/badge.svg?branch=master)](https://github.com/peanut996-im/im-frontend/actions/workflows/node.js.yml)
-[![Backend](https://github.com/peanut996-im/im-backend/actions/workflows/Go.yml/badge.svg?branch=master)](https://github.com/peanut996-im/im-backend/actions/workflows/Go.yml)
 
 ## 概述
 
