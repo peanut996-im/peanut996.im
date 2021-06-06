@@ -6,6 +6,7 @@ import (
 	"framework/tool"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"sync"
 )
 
 //User means a people who use the system.
@@ -53,6 +54,9 @@ func GetUserByUID(uid string) (*User, error) {
 }
 
 func GetUsersFromUIDs(uids ...string) ([]*User, error) {
+	var wg sync.WaitGroup
+	var lock sync.Mutex
+	var errs = make([]error, 0)
 	users := make([]*User, 0)
 	for _, uid := range uids {
 		// bugfix: when uid is "", it will return err
@@ -60,11 +64,23 @@ func GetUsersFromUIDs(uids ...string) ([]*User, error) {
 			logger.Warn("model.GetUsersFromUIDs uid is empty")
 			continue
 		}
-		user, err := GetUserByUID(uid)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, user)
+		wg.Add(1)
+		go func(uid string) {
+			defer wg.Done()
+			user, err := GetUserByUID(uid)
+			if err != nil {
+				lock.Lock()
+				errs = append(errs, err)
+				lock.Unlock()
+			}
+			lock.Lock()
+			users = append(users, user)
+			lock.Unlock()
+		}(uid)
+	}
+	wg.Wait()
+	if len(errs) > 0 {
+		return nil, errs[0]
 	}
 	return users, nil
 }

@@ -131,22 +131,45 @@ func GetGroupDatasByUID(uid string) ([]*GroupData, error) {
 }
 
 func GetGroupDataByGroupID(groupID string) (*GroupData, error) {
+	var wg sync.WaitGroup
+	var lock sync.Mutex
+	errs := make([]error, 0)
 	groupData := &GroupData{}
 	group, err := GetGroupByGroupID(groupID)
 	if nil != err {
 		return nil, err
 	}
 	groupData.Group = *group
-	users, err := GetUsersByGroup(group)
-	if err != nil {
-		return nil, err
-	}
-	groupData.Members = users
-	messages, err := GetGroupMessageWithPage(group, 0, DefaultFriendPageSize)
-	if err != nil {
-		return nil, err
-	}
-	groupData.Messages = messages
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		users, err := GetUsersByGroup(group)
+		if err != nil {
+			lock.Lock()
+			errs = append(errs, err)
+			lock.Unlock()
+		}
+		lock.Lock()
+		groupData.Members = users
+		lock.Unlock()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		messages, err := GetGroupMessageWithPage(group, 0, DefaultFriendPageSize)
+		if err != nil {
+			lock.Lock()
+			errs = append(errs, err)
+			lock.Unlock()
+		}
+		lock.Lock()
+		groupData.Messages = messages
+		lock.Unlock()
+	}()
+
+	wg.Wait()
 	return groupData, nil
 }
 

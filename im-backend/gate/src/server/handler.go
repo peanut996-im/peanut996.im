@@ -17,6 +17,7 @@ import (
 	sio "github.com/googollee/go-socket.io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func (s *Server) HandleInvoke(c *gin.Context) {
@@ -29,21 +30,25 @@ func (s *Server) HandleInvoke(c *gin.Context) {
 		return
 	}
 	for _, target := range iR.Targets {
-		go s.HandleInvokeEvent(target, iR.Event, iR.Data)
+		s.Produce(&api.SingleInvokeRequest{Target: target, Event: iR.Event, Data: iR.Data})
 	}
 	logger.Info("Gate.HandleInvoke Done.")
 }
 
 func (s *Server) HandleInvokeEvent(scene, event string, data interface{}) {
+	// TODO multiply lock race.
 	s.Lock()
-	si, ok := s.SceneToSessions[scene]
+	sessions, ok := s.SceneToSessions[scene]
 	if !ok {
 		logger.Info("Gate.HandleInvokeEvent Scene offline. Event: %v, Scene: %v", event, scene)
 		s.Unlock()
 		return
 	}
 	s.Unlock()
-	si.Push(event, data)
+	for _, si := range sessions {
+		go si.Push(event, data)
+	}
+
 }
 
 func (s *Server) SocketEventHandler(event string) interface{} {
@@ -98,75 +103,27 @@ func (s *Server) Auth(session *Session) (bool, error) {
 	return true, nil
 }
 
-//func (s *Server) ListenChat() {
-//	if reflect.TypeOf(s.gateBroker).String() == reflect.TypeOf(&broker.GateBrokerHttp{}).String() {
-//		s.gateBroker.Listen(s.ListenChatHTTP())
-//	} else {
-//		logger.Debug("Gate.Listen HTTP Start Failed")
-//	}
-//}
-
-func (s *Server) ListenChatHTTP() interface{} {
-	return func(c *gin.Context) {
-		logger.Info("Gate.PushChat from Logic")
-		pCR := &api.PushChatRequest{}
-		err := c.BindJSON(pCR)
-		if err != nil {
-			logger.Error("Gate.Chat PushChat "+api.UnmarshalJsonError, err)
-			c.AbortWithStatusJSON(http.StatusOK, api.NewHttpInnerErrorResponse(err))
-			return
-		}
-		scene := pCR.Target
-		s.Lock()
-		si, ok := s.SceneToSessions[scene]
-		if ok {
-			//online
-			logger.Info("Gate.ListenChat Session Online  \n[%v]", si.ToString())
-			si.Push(api.EventChat, pCR.Message)
-		} else {
-			//offline
-			logger.Info("Gate.ListenChat Session Offline")
-			messages, ok := s.offlineMessages[scene]
-			if !ok {
-				messages = make([]*model.ChatMessage, 0)
-			}
-			messages = append(messages, pCR.Message)
-			s.offlineMessages[scene] = messages
-			logger.Debug("%+v", s.offlineMessages[scene])
-			logger.Info("Gate.ListenChat Save Message Success. ")
-		}
-		s.Unlock()
-		c.JSON(http.StatusOK, api.NewSuccessResponse(nil))
-	}
+func (s *Server) ConsumeEvent(event *api.SingleInvokeRequest) {
+	s.HandleInvokeEvent(event.Target, event.Event, event.Data)
 }
 
-func (s *Server) PushOfflineMessage(session *Session) {
-	//logger.Info("Gate.PushOfflineMessage Start[%v]", session.ToString())
-	s.Lock()
-	messages, ok := s.offlineMessages[session.GetScene()]
-	if ok {
-		//logger.Info("Gate.PushOfflineMessage to session[%v]", session.ToString())
-		for _, message := range messages {
-			session.Push(api.EventChat, message)
+func (s *Server) DebugMapVars(c *gin.Context) {
+	sb := strings.Builder{}
+	sb.WriteString("SceneToSessions: \n{\n\n")
+	//SceneToSessionsString,_ := tool.PrettyPrint(s.SceneToSessions)
+	for key, sessions := range s.SceneToSessions {
+		tmp := strings.Builder{}
+		tmp.WriteString("[")
+		for _, session := range sessions {
+			tmp.WriteString(fmt.Sprintf("[%v],", session.ToString()))
 		}
-		delete(s.offlineMessages, session.GetScene())
-	} else {
-		//logger.Info("Gate.PushOfflineMessage No offline Message to session[%v]", session.ToString())
+		tmp.WriteString("]\n")
+		sb.WriteString(fmt.Sprintf("  %v: %v\n", key, tmp.String()))
 	}
-	s.Unlock()
-	//logger.Info("Gate.PushOfflineMessage Done. Session[%v]", session.ToString())
-
-}
-
-func (s *Server) Debug(c *gin.Context) {
-	res := "SocketIOToSessions:\n{\n"
-	for socket, session := range s.SocketIOToSessions {
-		res += fmt.Sprintf("    socket.id: %v, sesssion: %v\n", socket, session.ToString())
+	sb.WriteString("}\nSocketIOToSessions: \n{\n\n")
+	for key, session := range s.SocketIOToSessions {
+		sb.WriteString(fmt.Sprintf("  %v: %v\n\n", key, session.ToString()))
 	}
-	res += "}\nSceneToSessions:\n{\n"
-	for scene, session := range s.SceneToSessions {
-		res += fmt.Sprintf("    scene: %v, sesssion: %v\n", scene, session.ToString())
-	}
-	res += "}\n"
-	c.String(http.StatusOK, res)
+	sb.WriteString("}\n")
+	c.String(http.StatusOK, sb.String())
 }

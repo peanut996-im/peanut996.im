@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"framework/logger"
+
 	sio "github.com/googollee/go-socket.io"
 )
 
@@ -41,7 +42,7 @@ func ToString(c sio.Conn) string {
 	return "conn not found"
 }
 
-//func (s *Session) UIDSceneString() string {
+//func (s *Session) UIDSceneString() string {Ope
 //	return fmt.Sprintf("uid:%v_scene:%v", s.uid, s.scene)
 //}
 
@@ -50,6 +51,6 @@ func (s *Session) ToString() string {
 }
 
 func (s *Session) Push(event string, data interface{}) {
-	logger.Debug("Gate.Push Session: [%v] Event: %v, Data: %v", s.ToString(), event, data)
-	s.Conn.Emit(event, data)
+	logger.Debug("Gate.Push Session: [%v] Event: %v", s.ToString(), event)
+	go s.Conn.Emit(event, data)
 }

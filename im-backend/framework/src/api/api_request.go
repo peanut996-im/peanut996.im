@@ -84,3 +84,9 @@ type InvokeRequest struct {
 	Event   string      `json:"event"`
 	Data    interface{} `json:"data"`
 }
+
+type SingleInvokeRequest struct {
+	Target string      `json:"target"`
+	Event  string      `json:"event"`
+	Data   interface{} `json:"data"`
+}

@@ -18,13 +18,13 @@
           @createGroup="createGroup"
           @joinGroup="joinGroup"
           @addFriend="addFriend"
-          @setMyActiveRoom="setMyActiveRoom"
+          @setActiveRoom="setActiveRoom"
         >
         </Search>
-        <Room @setMyActiveRoom="setMyActiveRoom"></Room>
+        <Room @setActiveRoom="setActiveRoom"></Room>
       </template>
       <template v-else>
-        <Contact @addFriend="addFriend" @setMyActiveRoom="setMyActiveRoom"></Contact>
+        <Contact @addFriend="addFriend" @setActiveRoom="setActiveRoom"></Contact>
       </template>
     </div>
     <!-- 右侧聊天窗口 -->
@@ -47,8 +47,17 @@
     <a-drawer placement="left" :closable="false" :visible="visibleDrawer" @close="toggleDrawer" style="height: 100%">
       <div class="chat-drawer">
         <template v-if="activeTabName === 'message'">
-          <Search @addGroup="createGroup" @joinGroup="joinGroup" @addFriend="addFriend"> </Search>
-          <Room></Room>
+          <Search
+            @findUser="findUser"
+            @findGroup="findGroup"
+            @createGroup="createGroup"
+            @joinGroup="joinGroup"
+            @addFriend="addFriend"
+            @setActiveRoom="setActiveRoom"
+            @addGroup="createGroup"
+          >
+          </Search>
+          <Room @setActiveRoom="setActiveRoom"></Room>
         </template>
         <template v-else>
           <Contact @addFriend="addFriend"></Contact>
@@ -211,7 +220,7 @@ export default class Chat extends Vue {
     this.socket.emit('updateUser', data);
   }
 
-  setMyActiveRoom(room: Friend | Group) {
+  setActiveRoom(room: Friend | Group) {
     console.debug('change setMyActiveRoom On Chat');
     this._setActiveRoom(room);
   }

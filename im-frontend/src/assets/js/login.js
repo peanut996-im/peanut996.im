@@ -9,6 +9,7 @@ const isLogined = (tokenKey, uidKey) => {
     return window.Cookies.get(tokenKey) != undefined ||
         window.sessionStorage.getItem(uidKey) != undefined;
 }
+
 const saveToken = (token, uid) => {
     window.sessionStorage.setItem(tokenKey, token);
     window.sessionStorage.setItem(uidKey, uid);
@@ -33,8 +34,40 @@ const app = new Vue({
         ssoLogin: '',
     },
     methods: {
+        nameVerify: function (name) {
+            const nameReg = /^(?!_)(?!.*?_$)[a-zA-Z0-9_\u4e00-\u9fa5]+$/;
+            if (name.length === 0) {
+                this.$message.error('请输入名字');
+                return false;
+            }
+            if (!nameReg.test(name)) {
+                this.$message.error('名字只含有汉字、字母、数字和下划线 不能以下划线开头和结尾');
+                return false;
+            }
+            if (name.length > 16) {
+                this.$message.error('名字太长');
+                return false;
+            }
+            return true;
+        },
+
+        validateData: function (account, password) {
+            if (!this.nameVerify(account) ) {
+                return false;
+            }
+            if (password == undefined || password === '') {
+                this.$message.error('请输入密码');
+                return false;
+            }
+            return true;
+        },
+
         login: function () {
             console.log(`account: ${this.account}\npassword: ${this.password}`);
+            if(!this.validateData(this.account,this.password)){
+                console.debug("data validate failed");
+                return;
+            }
             let loginOption = {
                 account: this.account,
                 password: sha1(this.password).toUpperCase(),
@@ -52,12 +85,12 @@ const app = new Vue({
                             .then(() => {
                                 if (this.ssoLogin === 'on') {
                                     window.location.href = `${this.indexUrl}?token=${data.token}&uid=${data.uid}`
-                                }else{
+                                } else {
                                     if (this.env === 'production') {
                                         window.location.href = `${this.indexUrl}`;
                                     }
                                     if (this.env === 'development') {
-                                        this.$message.info('开发环境强制使用SSO登录',1).then(() => {
+                                        this.$message.info('开发环境强制使用SSO登录', 1).then(() => {
                                             window.location.href = `${this.indexUrl}?token=${data.token}&uid=${data.uid}`;
                                         });
                                     }
@@ -72,8 +105,13 @@ const app = new Vue({
                     console.log(error);
                     this.$message.error('login failed!', 2.5);
                 });
-        },
+        }
+        ,
         register: function () {
+            if(!this.validateData(this.account,this.password)){
+                console.debug("data validate failed");
+                return;
+            }
             let registerOption = {
                 account: this.account,
                 password: sha1(this.password).toUpperCase(),
@@ -90,12 +128,12 @@ const app = new Vue({
                             .then(() => {
                                 if (this.ssoLogin === 'on') {
                                     window.location.href = `${this.indexUrl}?token=${data.token}&uid=${data.uid}`
-                                }else{
+                                } else {
                                     if (this.env === 'production') {
                                         window.location.href = `${this.indexUrl}`;
                                     }
                                     if (this.env === 'development') {
-                                        this.$message.info('开发环境强制使用SSO登录',1).then(() => {
+                                        this.$message.info('开发环境强制使用SSO登录', 1).then(() => {
                                             window.location.href = `${this.indexUrl}?token=${data.token}&uid=${data.uid}`;
                                         });
                                     }

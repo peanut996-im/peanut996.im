@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"framework/api"
 	"framework/cfgargs"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
@@ -61,6 +62,8 @@ func (s *Server) AddNodeRoute(nodes ...*NodeRoute) {
 func (s *Server) Init(cfg *cfgargs.SrvConfig) {
 	if cfg.HTTP.Release {
 		gin.SetMode(gin.ReleaseMode)
+	} else {
+		pprof.Register(s.session)
 	}
 	if cfg.HTTP.Cors {
 		s.session.Use(CORS())

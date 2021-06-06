@@ -256,7 +256,14 @@ export default class Entry extends Vue {
       return this.$message.error(messageType === 'image' ? '图片必须小于5M!' : '文件必须小于30M!');
     }
     const ossFileName = `${messageType}/${newSnowFake()}.${getFileExtension(file.name)}`;
-    const result = await OSSClient.put(ossFileName, file);
+    const result = await OSSClient.put(ossFileName, file)
+      .then((data) => data)
+      .catch((err) => {
+        const res = err;
+        res.url = null;
+        return res;
+      });
+    console.debug(result);
     if (!result.url) {
       this.$message.error('上传失败');
       return;

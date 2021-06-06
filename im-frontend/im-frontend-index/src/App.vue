@@ -9,7 +9,6 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { DEFAULT_BACKGROUND } from '@/common';
 import zhCN from 'ant-design-vue/lib/locale-provider/zh_CN';
 
 const appModule = namespace('app');
@@ -26,8 +25,12 @@ export default class Chat extends Vue {
 
   mounted() {
     this.setMobile(this.isMobile());
-    if (!this.background || !this.background.trim().length) {
-      this.set_background(DEFAULT_BACKGROUND);
+    const localBackground = localStorage.getItem('background');
+    // if (!this.background || !this.background.trim().length) {
+    //   this.set_background(DEFAULT_BACKGROUND);
+    // }
+    if (localBackground) {
+      this.set_background(localBackground);
     }
   }
 

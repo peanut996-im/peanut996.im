@@ -12,6 +12,7 @@ import (
 	"framework/logger"
 	"framework/tool"
 	"sync"
+	"time"
 )
 
 func (s *Server) GetLoadData(uid string) (interface{}, error) {
@@ -78,7 +79,9 @@ func (s *Server) GetLoadData(uid string) (interface{}, error) {
 }
 
 func (s *Server) PushLoadData(uid string) {
+	start := time.Now()
 	loadData, err := s.GetLoadData(uid)
+	logger.Debug("Logic.PushLoadData /load %v", time.Since(start))
 	if err != nil {
 		logger.Error("Logic.PushLoadData Error: %v", err)
 		return
@@ -113,21 +116,16 @@ func (s *Server) PushChatMessage(message *model.ChatMessage) {
 	s.InvokeTarget(api.EventChat, message, targets...)
 }
 
-func (s *Server) GetGateAddrFromScene(scene string) (string, error) {
-	//TODO for cluster fix get from server
-	return fmt.Sprintf("%v:%v", s.cfg.Gate.Host, s.cfg.Gate.Port), nil
-}
-
-func (s *Server) GetChatUrlFromScene(scene string) (string, error) {
-	addr, err := s.GetGateAddrFromScene(scene)
+func (s *Server) ConsumeMessage(message *model.ChatMessage) {
+	err := model.InsertChatMessage(message)
 	if err != nil {
-		return "", err
+		logger.Error("Logic.ConsumeEvent err: %v", err)
 	}
-	return fmt.Sprintf("http://%v/%v", addr, api.EventChat), nil
 }
 
 func (s *Server) InvokeTarget(event string, data interface{}, targets ...string) {
-	logger.Info("Logic.InvokeTarget: event:%v, target: %v, data:%v", event, targets, data)
+	// TODO find target on different gate nodes.
+	logger.Info("Logic.InvokeTarget: event:%v, target: %v", event, targets)
 	iR := &api.InvokeRequest{
 		Event:   event,
 		Targets: targets,

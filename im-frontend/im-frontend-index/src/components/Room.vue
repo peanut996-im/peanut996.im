@@ -5,7 +5,7 @@
         v-if="chat.groupID"
         class="room-card"
         :class="{ active: activeRoom && activeRoom.groupID === chat.groupID }"
-        @click="changeMyActiveRoom(chat)"
+        @click="changeActiveRoom(chat)"
         v-contextmenu="'groupmenu' + chat.groupID"
       >
         <!-- 自定义右键菜单 -->
@@ -48,7 +48,7 @@
         v-else
         class="room-card"
         :class="{ active: activeRoom && !activeRoom.groupID && activeRoom.uid === chat.uid }"
-        @click="changeMyActiveRoom(chat)"
+        @click="changeActiveRoom(chat)"
         v-contextmenu="'contextmenu' + chat.uid"
       >
         <!-- 自定义右键菜单 -->
@@ -216,7 +216,7 @@ export default class Room extends Vue {
         this.$message.success(`已删除${(chat as Group).groupName || (chat as Friend).account}聊天窗口`);
       });
 
-      this.changeMyActiveRoom(this.myChatArr[0] as Friend | Group);
+      this.changeActiveRoom(this.myChatArr[0] as Friend | Group);
     }
   }
 
@@ -271,9 +271,9 @@ export default class Room extends Vue {
     this.myChatArr = roomArr;
   }
 
-  changeMyActiveRoom(activeRoom: Friend | Group) {
+  changeActiveRoom(activeRoom: Friend | Group) {
     console.debug('set my active room in Room');
-    this.$emit('setMyActiveRoom', activeRoom);
+    this.$emit('setActiveRoom', activeRoom);
     this.lose_unread_gather((activeRoom as Group).groupID || (activeRoom as Friend).roomID);
   }
 

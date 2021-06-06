@@ -203,7 +203,7 @@ export default class Search extends Vue {
   }
 
   selectMyChat(activeRoom: Friend & Group) {
-    this.$emit('setMyActiveRoom', activeRoom);
+    this.$emit('setActiveRoom', activeRoom);
   }
 
   @Watch('groupSearchResult')

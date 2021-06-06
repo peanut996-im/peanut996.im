@@ -218,7 +218,13 @@ export default class Tool extends Vue {
 
   async handleUpload() {
     this.uploading = true;
-    const result = await OSSClient.put(`avatar/${this.avatar.name}`, this.avatar);
+    const result = await OSSClient.put(`avatar/${this.avatar.name}`, this.avatar)
+      .then((data) => data)
+      .catch((err) => {
+        const res = err;
+        res.url = null;
+        return res;
+      });
     this.uploading = false;
     console.debug(result);
     if (!result.url) {

@@ -11,11 +11,13 @@ import (
 	myhttp "framework/net/http"
 	sio "github.com/googollee/go-socket.io"
 	"net/http"
+	_ "net/http/pprof"
 	"sync"
 	"time"
 )
 
 type Server struct {
+	cfg                *cfgargs.SrvConfig
 	sioSrv             *sio.Server
 	httpSrv            *http.Server
 	offlineMessages    map[string][]*model.ChatMessage
@@ -24,7 +26,8 @@ type Server struct {
 	handlers           map[string]interface{}
 	SocketIOToSessions map[string]*Session
 	//UIDSceneToSessions map[string]*Session
-	SceneToSessions map[string]*Session
+	SceneToSessions map[string][]*Session
+	eventQueue      chan *api.SingleInvokeRequest
 	sync.Mutex
 }
 
@@ -40,7 +43,8 @@ func NewServer() *Server {
 		offlineMessages:    make(map[string][]*model.ChatMessage),
 		SocketIOToSessions: make(map[string]*Session),
 		//UIDSceneToSessions: make(map[string]*Session),
-		SceneToSessions: make(map[string]*Session),
+		SceneToSessions: make(map[string][]*Session),
+		eventQueue:      make(chan *api.SingleInvokeRequest, 5000),
 	}
 	return s
 }
@@ -65,6 +69,9 @@ func (s *Server) MountHandlers() {
 	routers := []*myhttp.Route{
 		myhttp.NewRoute(api.HTTPMethodPost, "", s.HandleInvoke),
 	}
+	if !s.cfg.HTTP.Release {
+		routers = append(routers, myhttp.NewRoute(api.HTTPMethodGet, "debug/maps", s.DebugMapVars))
+	}
 	node := myhttp.NewNodeRoute(path, routers...)
 	s.gateBroker.(*broker.GateBrokerHttp).AddNodeRoute(node)
 
@@ -74,6 +81,7 @@ func (s *Server) MountHandlers() {
 }
 
 func (s *Server) Init(cfg *cfgargs.SrvConfig) {
+	s.cfg = cfg
 	// rpc by http
 	if cfg.Logic.Mode == "http" {
 		s.gateBroker = broker.NewGateBrokerHttp()
@@ -115,7 +123,7 @@ func (s *Server) Init(cfg *cfgargs.SrvConfig) {
 	})
 
 	s.OnError(func(conn sio.Conn, err error) {
-		logger.Error("socket.io on err: %v, id: %v", err, conn.ID())
+		logger.Error("socket.io on err: %v", err)
 	})
 
 	s.MountHandlers()
@@ -125,6 +133,7 @@ func (s *Server) Init(cfg *cfgargs.SrvConfig) {
 
 func (s *Server) Run(cfg *cfgargs.SrvConfig) error {
 	go s.gateBroker.Listen()
+	go s.Consume(s.ConsumeEvent)
 	defer func(srv *sio.Server) {
 		err := srv.Close()
 		if err != nil {
@@ -185,7 +194,6 @@ func (s *Server) SetNameSpace(nsp string) {
 
 //AcceptSession authentication for session
 func (s *Server) AcceptSession(session *Session) error {
-	logger.Info("%v try to get lock")
 	s.Lock()
 	logger.Info("Session.Accept Start. Session[%v]", session.ToString())
 	ok, err := s.Auth(session)
@@ -194,7 +202,13 @@ func (s *Server) AcceptSession(session *Session) error {
 		return err
 	}
 	s.SocketIOToSessions[session.GetID()] = session
-	s.SceneToSessions[session.scene] = session
+	sessions, ok := s.SceneToSessions[session.scene]
+	if !ok {
+		s.SceneToSessions[session.scene] = []*Session{session}
+	} else {
+		sessions = append(sessions, session)
+		s.SceneToSessions[session.scene] = sessions
+	}
 	s.Unlock()
 	//logger.Info("Session.Accept succeed, session:[%v]", session.ToString())
 	logger.Info("Session.Accept Done. Session[%v]", session.ToString())
@@ -211,13 +225,30 @@ func (s *Server) DisconnectSession(conn sio.Conn) *Session {
 	}
 
 	if nil != si {
-		siScene, ok := s.SceneToSessions[si.scene]
-		if ok || nil != siScene {
+		sessions, ok := s.SceneToSessions[si.scene]
+		if ok || nil != sessions {
 			logger.Info("Sessions.DisconnectSession, Scene:%v", si.scene)
-			delete(s.SceneToSessions, si.scene)
+			//delete(s.SceneToSessions, si.si)
+			newSessions := make([]*Session, 0, len(sessions))
+			for _, si := range sessions {
+				if si.GetID() != conn.ID() {
+					newSessions = append(newSessions, si)
+				}
+			}
+			s.SceneToSessions[si.scene] = newSessions
 		}
 	}
 
 	s.Unlock()
 	return si
+}
+
+func (s *Server) Produce(event *api.SingleInvokeRequest) {
+	s.eventQueue <- event
+}
+
+func (s *Server) Consume(consumeFunc func(event *api.SingleInvokeRequest)) {
+	for event := range s.eventQueue {
+		consumeFunc(event)
+	}
 }

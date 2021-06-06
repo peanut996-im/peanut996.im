@@ -2,6 +2,7 @@ package server
 
 import (
 	"framework/api"
+	"framework/api/model"
 	"framework/broker"
 	"framework/cfgargs"
 	"framework/logger"
@@ -10,14 +11,17 @@ import (
 )
 
 type Server struct {
-	cfg         *cfgargs.SrvConfig
-	logicBroker broker.LogicBroker
-	httpSrv     *http.Server
-	httpClient  *http.Client
+	cfg          *cfgargs.SrvConfig
+	logicBroker  broker.LogicBroker
+	httpSrv      *http.Server
+	httpClient   *http.Client
+	messageQueue chan *model.ChatMessage
 }
 
 func NewServer() *Server {
-	return &Server{}
+	return &Server{
+		messageQueue: make(chan *model.ChatMessage, 5000),
+	}
 }
 
 func (s *Server) Init(cfg *cfgargs.SrvConfig) {
@@ -34,7 +38,11 @@ func (s *Server) Init(cfg *cfgargs.SrvConfig) {
 	s.MountRoute()
 
 }
+
 func (s *Server) Run() {
+	go func() {
+		s.Consume(s.ConsumeMessage)
+	}()
 	go s.logicBroker.Listen()
 	//go s.httpSrv.Run()
 }
@@ -61,4 +69,19 @@ func (s *Server) MountRoute() {
 	node := http.NewNodeRoute(path, routers...)
 	s.logicBroker.(*broker.LogicBrokerHttp).AddNodeRoute(node)
 	s.httpSrv.AddNodeRoute(node)
+}
+
+func (s *Server) Produce(message *model.ChatMessage) {
+	// MQ　producer
+	logger.Info("Logic.Produce: produce new message: [%+v]", *message)
+	s.messageQueue <- message
+}
+
+func (s *Server) Consume(consumerFunc func(message *model.ChatMessage)) {
+	for message := range s.messageQueue {
+		// MQ consumer
+		logger.Info("Logic.Consume: consume message: [%+v]", *message)
+		//s.PushChatMessage(message)
+		consumerFunc(message)
+	}
 }

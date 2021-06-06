@@ -20,8 +20,7 @@ const getters: GetterTree<AppState, RootState> = {
   },
   background(state) {
     // eslint-disable-next-line no-unused-expressions
-    state.background;
-    return localStorage.getItem('background');
+    return state.background;
   },
   activeTabName(state) {
     return state.activeTabName;

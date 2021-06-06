@@ -1,4 +1,5 @@
 import cookie from 'js-cookie';
+import { DEFAULT_BACKGROUND } from '@/common';
 
 export interface AppState {
   user: User;
@@ -28,7 +29,7 @@ const appState: AppState = {
   uid: '',
   token: cookie.get('token') as string,
   mobile: false,
-  background: '',
+  background: DEFAULT_BACKGROUND,
   activeTabName: 'message',
   loginUrl: process.env.VUE_APP_LOGIN_URL,
   loading: false, // 全局Loading状态
